@@ -1,6 +1,6 @@
 # SSHNET Date Process Subsystem(暂定)
 
-一个 HY2-B 数据处理脚本。	
+一个 HY2-B 数据处理脚本。
 
 ## 功能
 
