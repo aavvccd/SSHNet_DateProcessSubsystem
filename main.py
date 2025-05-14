@@ -12,7 +12,7 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 
-file_rootdir = r"E:\ALT paper\HY-2B\0126" # 文件目录
+file_rootdir = r"D:\Download\satellite\HY-2B" # 文件目录
 data_out_dirname = 'dataresult' # 输出目录
 resolution = 1 #生成网格的分辨率
 intermathord = 'linear'
@@ -42,7 +42,7 @@ for i in dirs:
         'agc_numval_ku': [],  # 注意：原数据标签中此处缺少逗号，已修正
         'rad_water_vapor': [],
         'off_nadir_angle_wf_ku': [],
-        'geoid': []
+        'geoid':[],
         # 'waveforms_20hz_ku': []  # 二维数据可用嵌套列表（如 [[v1, v2, ...], ...]）
     }
     data_lable_list = list(data_arrays.keys())
@@ -57,6 +57,7 @@ for i in dirs:
     mask = (data_arrays['mean_sea_surface'] != 2) & (data_arrays['mean_sea_surface'] != 3) & qual
 
     for lable in data_lable_list:
+        # print(data_arrays[lable].max())
         data_arrays[lable] = data_arrays[lable][mask]
 
     data_arrays['lon'] = np.where(data_arrays['lon']>180, data_arrays['lon']-360,data_arrays['lon'])
@@ -72,28 +73,40 @@ for i in dirs:
     datarepair.create_folder(data_out_dirname)
 
     for lable in data_lable_list:
-        grid_data = griddata(
-            points, data_arrays[lable],
-            (grid_lon2d, grid_lat2d),
-            method=intermathord,
-            fill_value=np.nan
-        )
-        
-        grid_data = filter.sliding_window_filter(grid_data,5,'gaussian')
+        if lable!='surface_type':
+            grid_data = griddata(
+                points, data_arrays[lable],
+                (grid_lon2d, grid_lat2d),
+                method=intermathord,
+                fill_value=np.nan
+            )
+        else:
+            grid_data = griddata(
+                points, data_arrays[lable],
+                (grid_lon2d, grid_lat2d),
+                method='nearest',
+                fill_value=np.nan
+            )
         # 存储插值结果到字典
+        grid_data  = filter.sliding_window_filter(grid_data,3,'gaussian')
+        if lable == 'surface_type':
+            grid_data = np.ceil(grid_data)
         gridded_data[lable] = grid_data
-
         plt.figure(figsize=(12, 8))
         ax = plt.axes(projection=ccrs.PlateCarree())
 
         #绘制海洋数据
+        # mask = not np.isnan(grid_data)
+        # val_mx = int(grid_data[mask].max())
+        # val_mi = int(grid_data[mask].min())
+
         contour = ax.contourf(
             grid_lon2d,
             grid_lat2d,
             grid_data,
             transform=ccrs.PlateCarree(),
-            cmap='viridis',
-            levels=20,
+            cmap='turbo',
+            levels=256,
             zorder=0  # 确保数据层在底层
         )
         # 添加陆地覆盖层（关键步骤）
@@ -117,10 +130,10 @@ for i in dirs:
 
         # 添加标题和网格
         plt.title(f'Interpolated {lable} Data (Resolution: {resolution}°)')
-        ax.gridlines(draw_labels=True, linewidth=0.5, color='gray', alpha=0.5)
+        ax.gridlines(draw_labels=True, linewidth=0.3, color='gray', alpha=0.5)
 
         output_path = os.path.join(data_out_dirname, f'{lable}_interpolation.png')
-        plt.savefig(output_path, dpi=300, bbox_inches='tight')
+        plt.savefig(output_path, dpi=900, bbox_inches='tight')
         plt.close()
 
     # 生成文件名
@@ -129,3 +142,4 @@ for i in dirs:
           f"merged_grid_{i}.nc"  # 示例: merged_grid_cycle001.nc
     )
     datarepair.export_to_netcdf(gridded_data, grid_lon, grid_lat, output_path, resolution)
+    print('YR倾情巨献!!!')
