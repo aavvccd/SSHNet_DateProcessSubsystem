@@ -2,12 +2,6 @@ import os
 import pandas as pd
 import netCDF4 as nc
 import numpy as np
-from ..NcOp import NcFileIO
-import scipy.stats as stats
-from scipy.interpolate import griddata
-import matplotlib.pyplot as plt
-import cartopy.crs as ccrs
-import cartopy.feature as cfeature
 
 # 自定义单位映射函数
 def _get_units(var_name):
@@ -79,7 +73,11 @@ def export_to_netcdf(gridded_data, grid_lon, grid_lat, filename, resolution):
 def qul_control(data_array, data_list):
     qual_arr = []
     flag = True
+    flag = True
     for i in data_list:
+        if flag:
+            flag = False
+            qual_arr=(data_array[i] < data_array[i].max())
         if flag:
             flag = False
             qual_arr=(data_array[i] < data_array[i].max())

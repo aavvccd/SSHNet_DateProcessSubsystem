@@ -1,4 +1,5 @@
 import numpy as np
+
 def sliding_window_filter(matrix,window_size,filter_type='mean'):
     rows,cols = matrix.shape
     filteredMatrix = np.full([rows,cols],np.nan)
