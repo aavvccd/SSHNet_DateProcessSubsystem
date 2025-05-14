@@ -4,9 +4,9 @@ import netCDF4 as nc
 import numpy as np
 from lib.NcOp import NcFileIO
 from lib.dataprocess import datarepair
+from lib.dataprocess import filter
 import scipy.stats as stats
 import pandas as pd
-# from gensim.utils import is_empty
 from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
@@ -14,12 +14,10 @@ import cartopy.feature as cfeature
 
 file_rootdir = r"E:\ALT paper\HY-2B\0126" # 文件目录
 data_out_dirname = 'dataresult' # 输出目录
-resolution = 0.25 #生成网格的分辨率
+resolution = 1 #生成网格的分辨率
 intermathord = 'linear'
 gridded_data = {} # 创建存储网格数据的字典
 dirs=os.listdir(file_rootdir) #获取文件夹中的所有cycle
-
-# nc_file = nc.Dataset('gridded_data.nc', 'w')
 
 datarepair.create_folder(data_out_dirname)
 
@@ -44,6 +42,7 @@ for i in dirs:
         'agc_numval_ku': [],  # 注意：原数据标签中此处缺少逗号，已修正
         'rad_water_vapor': [],
         'off_nadir_angle_wf_ku': [],
+        'geoid': []
         # 'waveforms_20hz_ku': []  # 二维数据可用嵌套列表（如 [[v1, v2, ...], ...]）
     }
     data_lable_list = list(data_arrays.keys())
@@ -79,6 +78,8 @@ for i in dirs:
             method=intermathord,
             fill_value=np.nan
         )
+        
+        grid_data = filter.sliding_window_filter(grid_data,5,'gaussian')
         # 存储插值结果到字典
         gridded_data[lable] = grid_data
 
@@ -127,4 +128,4 @@ for i in dirs:
          data_out_dirname,
           f"merged_grid_{i}.nc"  # 示例: merged_grid_cycle001.nc
     )
-    datarepair.export_to_netcdf(gridded_data, grid_lon, grid_lat, output_path)
+    datarepair.export_to_netcdf(gridded_data, grid_lon, grid_lat, output_path, resolution)
