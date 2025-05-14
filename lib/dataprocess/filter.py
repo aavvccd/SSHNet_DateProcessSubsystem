@@ -23,16 +23,16 @@ def sliding_window_filter(matrix,window_size,filter_type='mean'):
                     G = np.exp(-(X ** 2 + Y ** 2) / (2 * sigma ** 2))
                     G = G / np.sum(G)
                     filteredMatrix[i, j] = np.sum(windows * G)
-                elif filteredMatrix == 'max':
+                elif filter_type == 'max':
                     filteredMatrix[i,j] = np.max(windows)
-                elif filteredMatrix == 'min':
+                elif filter_type == 'min':
                     filteredMatrix[i,j] = np.min(windows)
-                elif filteredMatrix == 'laplacian':
+                elif filter_type == 'laplacian':
                     LaplacianKernel = [[1,-2,1],[-2,4,-2],[1,-2,1]]
                     filteredMatrix[i][j] = np.sum(windows*LaplacianKernel)
-                elif filteredMatrix == 'rms':
+                elif filter_type == 'rms':
                     filteredMatrix[i][j] = np.sqrt(np.mean(windows*windows))
-                elif filteredMatrix == 'bilateral':
+                elif filter_type == 'bilateral':
                     sigma_spatial = 1
                     sigma_intensity = 1
                     x = np.arange(-halfWindowSize, halfWindowSize + 1)
