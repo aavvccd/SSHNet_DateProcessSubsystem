@@ -37,16 +37,16 @@ def plot(data_out_dirname, resolution, lable, grid_lon2d, grid_lat2d, grid_data)
             grid_data,
             transform=ccrs.PlateCarree(),
             cmap='turbo',
-            levels=256,
+            levels=512,
             zorder=0  # 确保数据层在底层
         )
         # 添加陆地覆盖层（关键步骤）
-    ax.add_feature(
-            cfeature.LAND,
-            facecolor='white',  # 与背景同色
-            edgecolor='none',  # 隐藏边界线
-            zorder=1  # 覆盖在数据层之上
-        )
+    # ax.add_feature(
+    #         cfeature.LAND,
+    #         facecolor='white',  # 与背景同色
+    #         edgecolor='none',  # 隐藏边界线
+    #         zorder=1  # 覆盖在数据层之上
+    #     )
         # 添加海岸线参考
     ax.add_feature(
             cfeature.COASTLINE.with_scale('110m'),
@@ -101,7 +101,7 @@ def process_label(args):
     )
     
     # 应用滑动窗口滤波
-    grid_data = filter.sliding_window_filter(grid_data, 3, 'gaussian')
+    grid_data = filter.sliding_window_filter(grid_data, 3, 'mean')
     
     # 对表面类型数据进行取整处理
     if lable == 'surface_type':
@@ -113,11 +113,11 @@ def process_label(args):
     return (lable, grid_data)
 
 if __name__ == '__main__':
-    # 主程序入口（必须的Windows多进程保护）
     # ------------------ 初始化配置 ------------------
-    file_rootdir = r"D:\Download\satellite\HY-2B"  # 原始数据根目录
+    # file_rootdir = r"D:\Download\satellite\HY-2B"  # 原始数据根目录
+    file_rootdir = r"E:\ALT paper\HY-2B\0126"  # 原始数据根目录
     data_out_dirname = 'dataresult'                # 输出目录名称
-    resolution = 1                                 # 网格分辨率（单位：度）
+    resolution = 0.25                                 # 网格分辨率（单位：度）
     intermathord = 'linear'                        # 默认插值方法
     
     # ------------------ 目录准备 ------------------
@@ -154,7 +154,7 @@ if __name__ == '__main__':
         
         # ------------------ 数据质量控制 ------------------
         qual = datarepair.qul_control(data_arrays, data_lable_list)
-        mask = (data_arrays['mean_sea_surface'] != 2) & (data_arrays['mean_sea_surface'] != 3) & qual
+        mask = (data_arrays['surface_type'] != 2) & (data_arrays['surface_type'] != 3) & (data_arrays['surface_type'] != 1) & qual
         for lable in data_lable_list:
             data_arrays[lable] = data_arrays[lable][mask]  # 应用质量掩码
         
