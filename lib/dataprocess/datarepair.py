@@ -2,6 +2,12 @@ import os
 import pandas as pd
 import netCDF4 as nc
 import numpy as np
+from ..NcOp import NcFileIO
+import scipy.stats as stats
+from scipy.interpolate import griddata
+import matplotlib.pyplot as plt
+import cartopy.crs as ccrs
+import cartopy.feature as cfeature
 
 # 自定义单位映射函数
 def _get_units(var_name):
@@ -70,20 +76,24 @@ def export_to_netcdf(gridded_data, grid_lon, grid_lat, filename, resolution):
         print(f"成功导出合并文件: {filename}")
 
 # 质量控制
-def qul_control(data_array, data_list):
+def qul_control(data, lable, qual_lable, qual_arrays):
     qual_arr = []
-    flag = True
-    flag = True
-    for i in data_list:
-        if flag:
-            flag = False
-            qual_arr=(data_array[i] < data_array[i].max())
-        if flag:
-            flag = False
-            qual_arr=(data_array[i] < data_array[i].max())
+    print(lable)
+    for qual in qual_lable:
+        if(lable in qual) & (lable != 'alt'):
+            qual_arr = qual_arrays[qual]
         else:
-            qual_arr = (qual_arr) & (data_array[i]<data_array[i].max())
+            qual_arr = data<data.max()
     return qual_arr
+
+    # flag = True
+    # for i in data_list:
+    #     if flag:
+    #         flag = False
+    #         qual_arr=(data_array[i] < data_array[i].max())
+    #     else:
+    #         qual_arr = (qual_arr) & (data_array[i]<data_array[i].max())
+    # return qual_arr
 
 #创建输出目录
 def create_folder(path):
