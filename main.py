@@ -10,11 +10,11 @@ from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
-from waveform import WaveformReshaper
+from lib.dataprocess.waveform import WaveformReshaper
 
 
 
-file_rootdir = r"E:\dlproject\documents\ncdata"  # 文件目录
+file_rootdir = r"D:\Download\satellite\HY-2B"  # 文件目录
 data_out_dirname = 'dataresult'  # 输出目录
 resolution = 1  # 生成网格的分辨率
 intermathord = 'linear'
@@ -125,8 +125,7 @@ for i in dirs:
 
 
     # 初始化波形处理器
-    data_shape = waveforms_20hz_ku.shape
-    reshaper = WaveformReshaper(data_shape[0],20,128)
+    reshaper = WaveformReshaper(waveforms_20hz_ku.shape[0],20,128)
     reshaped_data = reshaper.reshape_to_3d(waveforms_20hz_ku)
     # print("三维数据形状:", reshaped_data.shape)
 

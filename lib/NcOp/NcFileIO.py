@@ -54,7 +54,6 @@ data: NetCDF数据集对象或包含多个数据集对象的列表。
 
 def list_variables(data):
     table_data = []
-    print(data.Title)
     for variable in data.variables:
         table_data.append([variable, len(data[variable][:])])
     print(tabulate(table_data, headers=['Variable', 'Size'], tablefmt='tabs'))
@@ -77,14 +76,14 @@ def describe_variable(data, decimal_places=6):
         data_type = str(data[variable][:].dtype)
         table_data.append([
             variable,
-            len(data[variable][:]),
+            data[variable].shape,
             np.count_nonzero(data[variable][:]),
             f"{val_min:.{decimal_places}f}",
             f"{val_max:.{decimal_places}f}",
             f"{val_mean:.{decimal_places}f}",
             data_type
         ])
-    print(tabulate(table_data, headers=['Variable','Size', 'Not-null', 'Min', 'Max', 'Mean','Type'], tablefmt='fancy_grid', floatfmt=f".{decimal_places}f"))
+    print(tabulate(table_data, headers=['Variable','Shape', 'Not-null', 'Min', 'Max', 'Mean','Type'], tablefmt='fancy_grid', floatfmt=f".{decimal_places}f"))
 
 
 """
@@ -101,40 +100,3 @@ def get_variable(data, variable_name):
         return data[variable_name][:]
     else:
         return None
-
-
-"""
-将NetCDF数据集中的数据导出为CSV文件。
-参数:
-data: NetCDF数据集对象或包含多个数据集对象的列表。
-out_path (str): CSV文件的输出路径。
-name (str): CSV文件的名称（不包含扩展名）。
-variables (list): 要导出的变量列表，如果为None，则导出所有变量。
-"""
-def export_to_csv(data,out_path,name,variables=None):
-    if variables is None:
-        if isinstance(data, list):
-            variables = data[0].variables
-        else:
-            variables = data.variables
-    pd_arrays = {var: pd.Series(dtype = float) for var in variables}
-    if isinstance(data, list):
-        for dataset in data:
-            for var_name in variables:
-                    pd_arrays[var_name] = pd.concat(
-                        [pd_arrays[var_name], pd.Series(dataset.variables[var_name][:], dtype=float)])
-    else:
-        dataset = data
-        for var_name in variables:
-            pd_arrays[var_name] = pd.concat(
-                [pd_arrays[var_name], pd.Series(dataset.variables[var_name][:], dtype=float)])
-
-    reference_date = datetime(2000, 1, 1)
-    pd_arrays['time'] = [reference_date + timedelta(seconds=t) for t in pd_arrays['time']]
-    pd_arrays['time'] = [t.strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] for t in pd_arrays['time']]
-    df = pd.DataFrame(pd_arrays)
-    df['time'] = pd.to_datetime(df['time'])
-    df.sort_values(by='time', inplace=True)
-    csv_file_name = os.path.basename(name) + '.csv'
-    csv_file_path = os.path.join(out_path, csv_file_name)
-    df.to_csv(csv_file_path, index=False)
