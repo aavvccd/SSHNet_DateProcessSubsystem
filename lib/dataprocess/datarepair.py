@@ -30,13 +30,13 @@ def export_to_netcdf(gridded_data, grid_lon, grid_lat, filename, resolution):
 
         # ====== 创建坐标变量 ======
         # 经度
-        lon_var = ds.createVariable('lon', 'f4', ('lon',))
+        lon_var = ds.createVariable('lon', 'i', ('lon',))
         lon_var[:] = grid_lon
         lon_var.units = 'degrees_east'
         lon_var.long_name = 'Longitude'
 
         # 纬度
-        lat_var = ds.createVariable('lat', 'f4', ('lat',))
+        lat_var = ds.createVariable('lat', 'i', ('lat',))
         lat_var[:] = grid_lat
         lat_var.units = 'degrees_north'
         lat_var.long_name = 'Latitude'
@@ -61,7 +61,7 @@ def export_to_netcdf(gridded_data, grid_lon, grid_lat, filename, resolution):
                 dimensions=('lat', 'lon'),  # 注意维度顺序
                 zlib=True,  # 启用压缩
                 complevel=4,
-                fill_value=-9999.0
+                fill_value=-99999.99 #填充网格点空值，后续分析时需过滤此值（如使用NaN替换）
             )
 
             # 添加变量属性
@@ -69,9 +69,7 @@ def export_to_netcdf(gridded_data, grid_lon, grid_lat, filename, resolution):
             var.units = _get_units(var_name)  # 需要自定义单位获取函数
             var.grid_mapping = "latitude_longitude"
 
-            # 处理缺失值
-            masked_data = np.where(np.isnan(data), 0, data)
-            var[:] = masked_data
+            var[:] = data
 
         print(f"成功导出合并文件: {filename}")
 
@@ -102,3 +100,49 @@ def create_folder(path):
         print(f"文件夹创建成功: {path}")
     except Exception as e:
         print(f"创建失败: {e}")
+
+#画图
+def plot(data_out_dirname, resolution, lable, grid_lon2d, grid_lat2d, grid_data):
+    plt.figure(figsize=(12, 8))
+    ax = plt.axes(projection=ccrs.PlateCarree())
+
+    # 绘制海洋数据
+    # mask = not np.isnan(grid_data)
+    # val_mx = int(grid_data[mask].max())
+    # val_mi = int(grid_data[mask].min())
+
+    contour = ax.contourf(
+        grid_lon2d,
+        grid_lat2d,
+        grid_data,
+        transform=ccrs.PlateCarree(),
+        cmap='turbo',
+        levels=256,
+        zorder=0  # 确保数据层在底层
+    )
+    # 添加陆地覆盖层（关键步骤）
+    ax.add_feature(
+        cfeature.LAND,
+        facecolor='white',  # 与背景同色
+        edgecolor='none',  # 隐藏边界线
+        zorder=1  # 覆盖在数据层之上
+    )
+    # 添加海岸线参考
+    ax.add_feature(
+        cfeature.COASTLINE.with_scale('110m'),
+        edgecolor='gray',
+        linewidth=0.5,
+        zorder=2  # 显示在最顶层
+    )
+
+    # 添加颜色条
+    cbar = plt.colorbar(contour, ax=ax, shrink=0.6)
+    cbar.set_label(lable)
+
+    # 添加标题和网格
+    plt.title(f'Interpolated {lable} Data (Resolution: {resolution}°)')
+    ax.gridlines(draw_labels=True, linewidth=0.3, color='gray', alpha=0.5)
+
+    output_path = os.path.join(data_out_dirname, f'{lable}_interpolation.png')
+    plt.savefig(output_path, dpi=900, bbox_inches='tight')
+    plt.close()

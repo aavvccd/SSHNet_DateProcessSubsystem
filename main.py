@@ -4,7 +4,7 @@ import netCDF4 as nc
 import numpy as np
 from lib.NcOp import NcFileIO
 from lib.dataprocess import datarepair
-from lib.dataprocess import filter
+from lib.dataprocess import oldfilter
 import scipy.stats as stats
 import pandas as pd
 from scipy.interpolate import griddata
@@ -15,8 +15,8 @@ from lib.dataprocess.waveform import WaveformReshaper
 
 
 
-file_rootdir = r"F:\ALT\Satellite data\HY-2B"  # 文件目录
-data_out_root_dirname = r'F:\ALT\dataresult'  # 输出目录
+file_rootdir = r"E:\dlproject\documents\ncdata"  # 文件目录
+data_out_root_dirname = r'E:\github\dataresult'  # 输出目录
 resolution = 1  # 生成网格的分辨率
 intermathord = 'linear'
   # 创建存储网格数据的字典
@@ -24,50 +24,7 @@ dirs = os.listdir(file_rootdir)  # 获取文件夹中的所有cycle
 datarepair.create_folder(data_out_root_dirname)
 
 
-# def plot(data_out_dirname, resolution, lable, grid_lon2d, grid_lat2d, grid_data):
-#     plt.figure(figsize=(12, 8))
-#     ax = plt.axes(projection=ccrs.PlateCarree())
-#
-#     # 绘制海洋数据
-#     # mask = not np.isnan(grid_data)
-#     # val_mx = int(grid_data[mask].max())
-#     # val_mi = int(grid_data[mask].min())
-#
-#     contour = ax.contourf(
-#         grid_lon2d,
-#         grid_lat2d,
-#         grid_data,
-#         transform=ccrs.PlateCarree(),
-#         cmap='turbo',
-#         levels=256,
-#         zorder=0  # 确保数据层在底层
-#     )
-#     # 添加陆地覆盖层（关键步骤）
-#     ax.add_feature(
-#         cfeature.LAND,
-#         facecolor='white',  # 与背景同色
-#         edgecolor='none',  # 隐藏边界线
-#         zorder=1  # 覆盖在数据层之上
-#     )
-#     # 添加海岸线参考
-#     ax.add_feature(
-#         cfeature.COASTLINE.with_scale('110m'),
-#         edgecolor='gray',
-#         linewidth=0.5,
-#         zorder=2  # 显示在最顶层
-#     )
-#
-#     # 添加颜色条
-#     cbar = plt.colorbar(contour, ax=ax, shrink=0.6)
-#     cbar.set_label(lable)
-#
-#     # 添加标题和网格
-#     plt.title(f'Interpolated {lable} Data (Resolution: {resolution}°)')
-#     ax.gridlines(draw_labels=True, linewidth=0.3, color='gray', alpha=0.5)
-#
-#     output_path = os.path.join(data_out_dirname, f'{lable}_interpolation.png')
-#     plt.savefig(output_path, dpi=900, bbox_inches='tight')
-#     plt.close()
+
 
 
 for i in dirs:
@@ -160,13 +117,9 @@ for i in dirs:
             mask = base_mask & qual
         else:
             mask = base_mask
+
         mask_lon = lon_all[mask]
         mask_lat = lat_all[mask]
-
-        # 添加自适应抖动（根据数据分辨率）
-        # jitter = resolution * 0.001  # 抖动量为分辨率的千分之一
-        # mask_lon += np.random.uniform(-jitter, jitter, size=mask_lon.shape)
-        # mask_lat += np.random.uniform(-jitter, jitter, size=mask_lat.shape)
 
         current_data = data_arrays[lable][mask]
         points = np.column_stack((mask_lon, mask_lat))
@@ -186,11 +139,11 @@ for i in dirs:
                 fill_value=np.nan
             )
         # 存储插值结果到字典
-        grid_data = filter.sliding_window_filter(grid_data, 3, 'gaussian') #滤波
+        grid_data = oldfilter.sliding_window_filter(grid_data, 3, 'gaussian') #滤波
         if lable == 'surface_type':
             grid_data = np.ceil(grid_data)
         gridded_data[lable] = grid_data
-        # plot(data_out_dirname, resolution, lable, grid_lon2d, grid_lat2d, grid_data)
+        datarepair.plot(data_out_dirname, resolution, lable, grid_lon2d, grid_lat2d, grid_data)
 
     #生成文件名
     output_path = os.path.join(
