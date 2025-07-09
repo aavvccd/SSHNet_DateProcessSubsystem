@@ -2,9 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import netCDF4 as nc
 import os
-import datetime
-
-from holoviews import output
 
 
 class WaveformReshaper:

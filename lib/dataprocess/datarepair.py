@@ -1,10 +1,6 @@
 import os
 import pandas as pd
 import netCDF4 as nc
-import numpy as np
-from ..NcOp import NcFileIO
-import scipy.stats as stats
-from scipy.interpolate import griddata
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature

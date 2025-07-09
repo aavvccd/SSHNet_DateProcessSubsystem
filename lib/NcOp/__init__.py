@@ -6,7 +6,7 @@ __init__.py - 数据分析包初始化文件
     NcFileIO (模块)：NetCDF文件输入/输出操作的模块。
     PreProcessing (模块)：数据预处理功能的模块。
 示例：
-    >>> from NcOp import DataAnalyse, NcFileIO, PreProcessing
+    >>> #from NcOp import DataAnalyse, NcFileIO, PreProcessing
     >>> # 使用DataAnalyse模块中的函数
     >>> # 使用NcFileIO模块中的函数
     >>> # 使用PreProcessing模块中的函数
